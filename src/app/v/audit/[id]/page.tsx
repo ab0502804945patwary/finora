@@ -1,14 +1,12 @@
-import { eq } from "drizzle-orm";
 import { ArrowLeft, Mail, SearchX, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { site } from "@/lib/config";
-import { db, ensureDb } from "@/lib/db";
+import { getDoc } from "@/lib/documents";
 import { fmtDate, UUID_RE } from "@/lib/format";
 import { isQrOnly } from "@/lib/qr";
-import { documents } from "@/lib/schema";
 import { HashCheck } from "./HashCheck";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +15,7 @@ export const metadata: Metadata = { title: "Verification result", robots: { inde
 export default async function AuditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: rawId } = await params;
   const id = rawId.toLowerCase();
-  let d = null;
-  if (UUID_RE.test(id)) {
-    await ensureDb();
-    [d] = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
-  }
+  const d = UUID_RE.test(id) ? await getDoc(id) : null;
 
   if (!d) return <NotFound rawId={rawId} />;
 

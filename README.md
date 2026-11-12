@@ -30,7 +30,7 @@ Local data is stored in `./data` (SQLite file `local.db` + stamped PDFs in `file
 
 ## Deploy later (Vercel)
 
-1. Create a Turso database → set `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`.
+1. Supabase SQL Editor → run `supabase/schema.sql` once (creates the locked `documents` table).
 2. Supabase → Storage → New bucket (e.g. `documents`, **private**, public access off) → set `SUPABASE_URL` (Project Settings → API), `SUPABASE_SERVICE_ROLE_KEY` (same page, keep secret) and `SUPABASE_BUCKET`. Cloudflare R2 also works instead via the `R2_*` variables.
 3. Set `ADMIN_PASSWORD`, `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL=https://finoraca.com`, `NEXT_PUBLIC_VERIFY_URL=https://everify.finoraca.com`.
 4. Add domains `finoraca.com`, `www.finoraca.com`, `everify.finoraca.com` to the Vercel project.

@@ -1,17 +1,14 @@
-import { eq } from "drizzle-orm";
 import { isAdmin } from "@/lib/auth";
-import { db, ensureDb } from "@/lib/db";
+import { getDoc } from "@/lib/documents";
 import { UUID_RE } from "@/lib/format";
 import { qrPng, qrSvg, verifyLinkFor } from "@/lib/qr";
-import { documents } from "@/lib/schema";
 
 // GET /api/admin/qr/<id>?format=png|svg  ->  print-ready QR code for the document's verification link
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdmin())) return new Response("Unauthorized", { status: 401 });
   const { id } = await params;
   if (!UUID_RE.test(id)) return new Response("Not found", { status: 404 });
-  await ensureDb();
-  const [d] = await db.select({ id: documents.id, companyName: documents.companyName }).from(documents).where(eq(documents.id, id)).limit(1);
+  const d = await getDoc(id);
   if (!d) return new Response("Not found", { status: 404 });
 
   const format = new URL(req.url).searchParams.get("format") === "svg" ? "svg" : "png";

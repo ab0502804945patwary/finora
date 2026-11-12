@@ -20,7 +20,7 @@ export const db = drizzle(client, { schema });
 export function ensureDb(): Promise<void> {
   // Vercel's filesystem is read-only, so a local SQLite file can never work there.
   if (process.env.VERCEL && url.startsWith("file:")) {
-    return Promise.reject(new Error("TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set on Vercel."));
+    return Promise.reject(new Error("Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (database), or TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, on Vercel."));
   }
   g.__dbReady ??= client
     .batch(

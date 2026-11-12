@@ -1,15 +1,13 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
 import { docTypes, verifyHost } from "@/lib/config";
-import { db, ensureDb } from "@/lib/db";
+import { insertDoc, updateStatus } from "@/lib/documents";
 import { UUID_RE } from "@/lib/format";
 import { publicUrlProblem, qrOnlyPlaceholderHash, QR_ONLY_REF, verifyLinkFor } from "@/lib/qr";
-import { documents } from "@/lib/schema";
 import { sha256Hex, stampPdf, type StampPages } from "@/lib/stamp";
 import { savePdf } from "@/lib/storage";
 
@@ -84,8 +82,7 @@ export async function createDocument(_: FormState, form: FormData): Promise<Form
     fileName = upload.name.slice(0, 200);
   }
 
-  await ensureDb();
-  await db.insert(documents).values({
+  await insertDoc({
     id,
     companyName,
     registrationNo: str(form, "registrationNo", 80) || null,
@@ -96,6 +93,7 @@ export async function createDocument(_: FormState, form: FormData): Promise<Form
     sha256,
     originalSha256,
     status: "valid",
+    revokedReason: null,
     fileRef,
     fileName,
     createdAt: Date.now(),
@@ -110,11 +108,7 @@ export async function setStatus(form: FormData) {
   const id = String(form.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
   const revoke = form.get("action") === "revoke";
-  await ensureDb();
-  await db
-    .update(documents)
-    .set({ status: revoke ? "revoked" : "valid", revokedReason: revoke ? str(form, "reason", 300) || null : null })
-    .where(eq(documents.id, id));
+  await updateStatus(id, revoke ? "revoked" : "valid", revoke ? str(form, "reason", 300) || null : null);
   revalidatePath(`/admin/doc/${id}`);
   revalidatePath("/admin");
 }

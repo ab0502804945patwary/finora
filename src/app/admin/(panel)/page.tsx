@@ -1,22 +1,13 @@
-import { desc, like, or } from "drizzle-orm";
 import { ChevronRight, FilePlus2, Files, Search, SearchX, X } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { db, ensureDb } from "@/lib/db";
+import { listDocs } from "@/lib/documents";
 import { fmtDate } from "@/lib/format";
-import { documents } from "@/lib/schema";
 
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const q = ((await searchParams).q ?? "").trim().slice(0, 100);
-  await ensureDb();
-  const pattern = `%${q.replace(/[%_]/g, "")}%`;
-  const rows = await db
-    .select()
-    .from(documents)
-    .where(q ? or(like(documents.companyName, pattern), like(documents.registrationNo, pattern), like(documents.id, pattern)) : undefined)
-    .orderBy(desc(documents.createdAt))
-    .limit(200);
+  const rows = await listDocs(q);
 
   return (
     <div>

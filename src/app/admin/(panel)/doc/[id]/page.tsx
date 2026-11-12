@@ -1,12 +1,10 @@
-import { eq } from "drizzle-orm";
 import { CheckCircle2, Download, ExternalLink, QrCode } from "lucide-react";
 import { notFound } from "next/navigation";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { isQrOnly, qrSvg, verifyLinkFor } from "@/lib/qr";
-import { db, ensureDb } from "@/lib/db";
+import { getDoc } from "@/lib/documents";
 import { fmtDate, fmtDateTime, UUID_RE } from "@/lib/format";
-import { documents } from "@/lib/schema";
 import { StatusPanel } from "./StatusPanel";
 
 export default async function DocPage({
@@ -19,8 +17,7 @@ export default async function DocPage({
   const { id } = await params;
   const { created } = await searchParams;
   if (!UUID_RE.test(id)) notFound();
-  await ensureDb();
-  const [d] = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
+  const d = await getDoc(id);
   if (!d) notFound();
 
   const link = verifyLinkFor(d.id);
