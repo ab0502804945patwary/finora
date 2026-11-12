@@ -18,8 +18,8 @@ export function sha256Hex(bytes: Uint8Array): string {
 }
 
 /**
- * Adds the verification block to the PDF: QR code on the left, details on the right
- * ("Scan to verify", dates, verification ID, link). Returns the new PDF bytes.
+ * Adds the verification footer to the PDF: a full-width rule, then the QR code on the left and the details
+ * on the right ("Scan to verify", dates, verification ID, link). Returns the new PDF bytes.
  */
 export async function stampPdf(input: Uint8Array, d: StampDetails): Promise<Uint8Array> {
   const pdf = await PDFDocument.load(input);
@@ -50,7 +50,7 @@ export async function stampPdf(input: Uint8Array, d: StampDetails): Promise<Uint
 
   const qrSize = 84; // includes the quiet zone, about 30 mm printed
   const gap = 6;
-  const pad = 6;
+  const pad = 4;
   const textW = Math.max(...lines.map((l) => l.f.widthOfTextAtSize(l.text, l.s)));
   const textH = lines.reduce((h, l) => h + l.s + l.gapAfter, 0);
   const blockW = pad + qrSize + gap + textW + pad;
@@ -58,22 +58,24 @@ export async function stampPdf(input: Uint8Array, d: StampDetails): Promise<Uint
 
   for (const page of targets) {
     const box = page.getCropBox();
-    const margin = 14;
+    const margin = 28; // left/right margin of the rule line and the block
+    const bottom = 16;
     // shrink the whole block on very small pages so it never runs off the edge
     const scale = Math.min(1, (box.width - margin * 2) / blockW);
     const x0 = box.x + margin;
-    const y0 = box.y + margin;
+    const y0 = box.y + bottom;
     const w = blockW * scale;
     const h = blockH * scale;
 
-    page.drawRectangle({
-      x: x0,
-      y: y0,
-      width: w,
-      height: h,
-      color: rgb(1, 1, 1),
-      borderColor: rgb(0.89, 0.88, 0.85),
-      borderWidth: 0.5,
+    // borderless white backing keeps the stamp readable if the page has content or a tint underneath
+    page.drawRectangle({ x: x0, y: y0, width: w, height: h + 10, color: rgb(1, 1, 1) });
+
+    // full-width rule above the block, like a footer separator
+    page.drawLine({
+      start: { x: x0, y: y0 + h + 6 },
+      end: { x: box.x + box.width - margin, y: y0 + h + 6 },
+      thickness: 1.25,
+      color: teal,
     });
 
     page.drawImage(qr, { x: x0 + pad * scale, y: y0 + (h - qrSize * scale) / 2, width: qrSize * scale, height: qrSize * scale });
