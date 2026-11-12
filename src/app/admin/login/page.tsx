@@ -1,9 +1,9 @@
 import { ArrowLeft, Fingerprint, QrCode, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { isAdmin } from "@/lib/auth";
+import { site } from "@/lib/config";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "Admin sign in", robots: { index: false } };
@@ -50,9 +50,9 @@ export default async function LoginPage() {
             <LoginForm />
           </div>
         </div>
-        <Link href="/" className="mx-auto mt-8 inline-flex items-center gap-1.5 text-[0.8125rem] text-muted transition hover:text-ink">
+        <a href={site.verifyUrl} className="mx-auto mt-8 inline-flex items-center gap-1.5 text-[0.8125rem] text-muted transition hover:text-ink">
           <ArrowLeft className="size-3.5" aria-hidden="true" /> Back to verification portal
-        </Link>
+        </a>
       </section>
     </main>
   );

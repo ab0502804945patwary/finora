@@ -2,8 +2,8 @@
 
 One Next.js app serves both:
 
-- `finoraca.com` → company site (`src/app/page.tsx`)
-- `everify.finoraca.com` → document verification portal (`src/app/v/*`) + admin (`src/app/admin/*`)
+- `finoraca.com` → company site (`src/app/page.tsx`) and admin panel at `/admin` (`src/app/admin/*`)
+- `everify.finoraca.com` → public document verification portal (`src/app/v/*`); never serves the admin
 
 `src/middleware.ts` routes by host name. Business details live in `src/lib/config.ts`.
 
@@ -16,7 +16,7 @@ npm run dev
 
 - Main site: http://localhost:3000
 - Verify portal: http://everify.localhost:3000
-- Admin: http://everify.localhost:3000/admin (password = `ADMIN_PASSWORD` in `.env.local`)
+- Admin: http://localhost:3000/admin (password = `ADMIN_PASSWORD` in `.env.local`)
 
 Local data is stored in `./data` (SQLite file `local.db` + stamped PDFs in `files/`). Delete the folder to reset.
 

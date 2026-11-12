@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { logout } from "@/app/admin/actions";
 import { Logo, LogoMark } from "@/components/Logo";
 import { Breadcrumbs, type Crumb } from "@/components/ui/Breadcrumbs";
+import { site } from "@/lib/config";
 import { cn } from "@/lib/cn";
 
 const nav = [
@@ -55,7 +56,7 @@ export function AdminSidebar() {
       <div className="border-t border-line px-3 py-4">
         <p className="px-3 pb-2 text-[0.6875rem] font-semibold tracking-[0.12em] text-muted uppercase">Account</p>
         <a
-          href="/"
+          href={site.verifyUrl}
           target="_blank"
           rel="noreferrer"
           className="flex h-9 items-center gap-3 rounded-md px-3 text-sm font-medium text-ink-soft transition hover:bg-sand hover:text-ink"
@@ -144,7 +145,7 @@ function AccountMenu() {
           <div className="my-1 h-px bg-line" />
           <a
             role="menuitem"
-            href="/"
+            href={site.verifyUrl}
             target="_blank"
             rel="noreferrer"
             onClick={() => setOpen(false)}
