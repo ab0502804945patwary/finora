@@ -4,9 +4,9 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
-import { docTypes, verifyHost } from "@/lib/config";
+import { docTypes } from "@/lib/config";
 import { insertDoc, updateStatus } from "@/lib/documents";
-import { UUID_RE } from "@/lib/format";
+import { fmtDate, UUID_RE } from "@/lib/format";
 import { publicUrlProblem, qrOnlyPlaceholderHash, QR_ONLY_REF, verifyLinkFor } from "@/lib/qr";
 import { sha256Hex, stampPdf, type StampPages } from "@/lib/stamp";
 import { savePdf } from "@/lib/storage";
@@ -50,6 +50,8 @@ export async function createDocument(_: FormState, form: FormData): Promise<Form
   if (!companyName) return { error: "Company name is required." };
   if (!docTypes.includes(docType as (typeof docTypes)[number])) return { error: "Pick a document type." };
   if (!DATE_RE.test(issuedOn)) return { error: "Issue date is required." };
+  const auditDate = optDate(str(form, "auditDate"));
+  const fyEnd = optDate(str(form, "fyEnd"));
   const pagesRaw = str(form, "pages");
   const pages: StampPages = pagesRaw === "first" || pagesRaw === "last" ? pagesRaw : "all";
 
@@ -72,7 +74,14 @@ export async function createDocument(_: FormState, form: FormData): Promise<Form
 
     let stamped: Uint8Array;
     try {
-      stamped = await stampPdf(original, { verifyLink: verifyLinkFor(id), id, pages, host: verifyHost });
+      stamped = await stampPdf(original, {
+        verifyLink: verifyLinkFor(id),
+        id,
+        pages,
+        auditDate: auditDate ? fmtDate(auditDate) : null,
+        fyEnd: fyEnd ? fmtDate(fyEnd) : null,
+        issuedOn: fmtDate(issuedOn),
+      });
     } catch {
       return { error: "Could not read this PDF. It may be password-protected or damaged." };
     }
@@ -87,8 +96,8 @@ export async function createDocument(_: FormState, form: FormData): Promise<Form
     companyName,
     registrationNo: str(form, "registrationNo", 80) || null,
     docType,
-    auditDate: optDate(str(form, "auditDate")),
-    fyEnd: optDate(str(form, "fyEnd")),
+    auditDate,
+    fyEnd,
     issuedOn,
     sha256,
     originalSha256,
