@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finora — main site + eVerify
 
-## Getting Started
+One Next.js app serves both:
 
-First, run the development server:
+- `finoraca.com` → company site (`src/app/page.tsx`)
+- `everify.finoraca.com` → document verification portal (`src/app/v/*`) + admin (`src/app/admin/*`)
+
+`src/middleware.ts` routes by host name. Business details live in `src/lib/config.ts`.
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Main site: http://localhost:3000
+- Verify portal: http://everify.localhost:3000
+- Admin: http://everify.localhost:3000/admin (password = `ADMIN_PASSWORD` in `.env.local`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Local data is stored in `./data` (SQLite file `local.db` + stamped PDFs in `files/`). Delete the folder to reset.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How issuing works
 
-## Learn More
+1. Admin uploads the final PDF and fills company / dates.
+2. Server generates a UUID, stamps a QR code (→ `everify.finoraca.com/audit/<id>`) + ID on the PDF.
+3. SHA-256 of the **stamped** PDF is saved with the record. Send the client the stamped PDF from the document page.
+4. Anyone can scan the QR, enter the ID, or drop the PDF on the verify page (hashed in the browser, never uploaded).
+5. Admin can revoke / restore a document; the public page reflects it.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy later (Vercel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Create a Turso database → set `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`.
+2. Supabase → Storage → New bucket (e.g. `documents`, **private**, public access off) → set `SUPABASE_URL` (Project Settings → API), `SUPABASE_SERVICE_ROLE_KEY` (same page, keep secret) and `SUPABASE_BUCKET`. Cloudflare R2 also works instead via the `R2_*` variables.
+3. Set `ADMIN_PASSWORD`, `SESSION_SECRET`, `NEXT_PUBLIC_SITE_URL=https://finoraca.com`, `NEXT_PUBLIC_VERIFY_URL=https://everify.finoraca.com`.
+4. Add domains `finoraca.com`, `www.finoraca.com`, `everify.finoraca.com` to the Vercel project.
+5. Namecheap → Advanced DNS: `A @ 76.76.21.21`, `CNAME www cname.vercel-dns.com`, `CNAME everify cname.vercel-dns.com` (use the exact values Vercel shows).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Limit: PDF upload max 4 MB (Vercel request body limit).
