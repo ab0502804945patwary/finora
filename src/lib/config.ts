@@ -1,7 +1,7 @@
 // Edit business details here. Everything on the site reads from this file.
 export const site = {
   name: "Finora",
-  legalName: "Finora Accountants & Consultants", // TODO: exact legal name
+  legalName: "Finora LLC",
   shortTagline: "Accounting · Audit · Advisory",
   tagline: "Clear numbers. Confident decisions.",
   description:
@@ -9,7 +9,7 @@ export const site = {
   email: "hello@finoraca.com", // TODO: confirm mailbox exists
   phone: "", // e.g. "+1 555 000 0000"
   address: "", // e.g. "City, Country"
-  issuer: "Finora Accountants & Consultants", // shown as "Issued by" on verification pages
+  issuer: "Finora LLC", // shown as "Issued by" on verification pages
   siteUrl: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, ""),
   verifyUrl: (process.env.NEXT_PUBLIC_VERIFY_URL || "http://everify.localhost:3000").replace(/\/$/, ""),
 };
