@@ -1,5 +1,4 @@
 import { desc, eq, like, or } from "drizzle-orm";
-import { db, ensureDb } from "./db";
 import { documents, type Doc } from "./schema";
 
 export type { Doc };
@@ -11,6 +10,13 @@ export type { Doc };
  *     The table is created once with supabase/schema.sql.
  *   - Local SQLite file (./data/local.db) for development without Supabase.
  */
+
+/** Local SQLite is loaded only when Supabase is not configured: its module creates ./data on import, which is read-only on Vercel. */
+async function localDb() {
+  const m = await import("./db");
+  await m.ensureDb();
+  return m.db;
+}
 
 function supabase() {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
@@ -92,7 +98,7 @@ export async function insertDoc(d: Doc): Promise<void> {
     await rest(sb, "", { method: "POST", body: JSON.stringify(toRow(d)), headers: { Prefer: "return=minimal" } });
     return;
   }
-  await ensureDb();
+  const db = await localDb();
   await db.insert(documents).values(d);
 }
 
@@ -102,7 +108,7 @@ export async function getDoc(id: string): Promise<Doc | null> {
     const rows = await rest<Row[]>(sb, `?id=eq.${encodeURIComponent(id)}&select=*&limit=1`);
     return rows[0] ? fromRow(rows[0]) : null;
   }
-  await ensureDb();
+  const db = await localDb();
   const [d] = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
   return d ?? null;
 }
@@ -113,7 +119,7 @@ export async function findIdBySha(hash: string): Promise<string | null> {
     const rows = await rest<{ id: string }[]>(sb, `?sha256=eq.${encodeURIComponent(hash)}&select=id&limit=1`);
     return rows[0]?.id ?? null;
   }
-  await ensureDb();
+  const db = await localDb();
   const [d] = await db.select({ id: documents.id }).from(documents).where(eq(documents.sha256, hash)).limit(1);
   return d?.id ?? null;
 }
@@ -126,7 +132,7 @@ export async function listDocs(q: string, limit = 200): Promise<Doc[]> {
     const rows = await rest<Row[]>(sb, `?select=*&order=created_at.desc&limit=${limit}${filter}`);
     return rows.map(fromRow);
   }
-  await ensureDb();
+  const db = await localDb();
   const pattern = `%${term}%`;
   return db
     .select()
@@ -146,6 +152,6 @@ export async function updateStatus(id: string, status: "valid" | "revoked", reas
     });
     return;
   }
-  await ensureDb();
+  const db = await localDb();
   await db.update(documents).set({ status, revokedReason: reason }).where(eq(documents.id, id));
 }
