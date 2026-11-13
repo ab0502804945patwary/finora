@@ -19,7 +19,7 @@ export default function VerifyLayout({ children }: { children: React.ReactNode }
       <header className="sticky top-0 z-30 border-b border-line bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" aria-label="eVerify home">
-            <Logo sub="eVerify · Document verification" />
+            <Logo sub="Document verification" fit />
           </Link>
           <nav aria-label="Portal" className="flex items-center gap-1">
             <Link href="/" className="btn btn-ghost btn-sm hidden sm:inline-flex">Verify a document</Link>

@@ -51,7 +51,7 @@ export function SiteHeader({ tagline }: { tagline: string }) {
       </a>
       <div className="container-site flex h-16 items-center justify-between gap-6 lg:h-[4.5rem]">
         <a href="#top" aria-label="Finora home" onClick={() => setOpen(false)}>
-          <Logo sub={tagline} />
+          <Logo sub={tagline} fit />
         </a>
 
         <nav aria-label="Main" className="hidden lg:block">

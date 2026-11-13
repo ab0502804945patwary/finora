@@ -204,7 +204,7 @@ export default function Home() {
       <footer className="border-t border-line bg-sand">
         <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Logo sub={site.shortTagline} />
+            <Logo sub={site.shortTagline} fit />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">{site.description}</p>
           </div>
           <FooterCol title="Navigation" links={siteNav.map((l) => ({ href: l.href, label: l.label }))} />
