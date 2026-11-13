@@ -1,8 +1,7 @@
-import { ArrowLeft, Mail, SearchX, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronRight, Fingerprint, Mail, SearchX, ShieldAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { site } from "@/lib/config";
 import { getDoc } from "@/lib/documents";
 import { fmtDate, UUID_RE } from "@/lib/format";
@@ -22,10 +21,7 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
   const valid = d.status === "valid";
   const qrOnly = isQrOnly(d.fileRef);
   const link = `${site.verifyUrl}/audit/${d.id}`;
-  const fields: [string, string][] = [
-    ["Company name", d.companyName],
-    ["Registration number", d.registrationNo || "—"],
-    ["Document type", d.docType],
+  const dates: [string, string][] = [
     ["Audit date", fmtDate(d.auditDate)],
     ["Financial year end", fmtDate(d.fyEnd)],
     ["Issued on", fmtDate(d.issuedOn)],
@@ -33,99 +29,118 @@ export default async function AuditPage({ params }: { params: Promise<{ id: stri
   ];
 
   return (
-    <div className="animate-slide-up space-y-5">
+    <div className="mx-auto max-w-2xl animate-slide-up space-y-5">
       <Link href="/" className="inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-muted transition hover:text-ink">
         <ArrowLeft className="size-3.5" aria-hidden="true" /> Verify another document
       </Link>
 
-      {/* Status banner */}
-      <section
-        aria-labelledby="status-title"
-        className={`overflow-hidden rounded-2xl border shadow-raised ${valid ? "border-ok/25 bg-white" : "border-bad/30 bg-white"}`}
-      >
-        <div className={`flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-8 ${valid ? "bg-ok-tint/70" : "bg-bad-tint"}`}>
-          <span
-            className={`flex size-14 shrink-0 items-center justify-center rounded-full ring-8 sm:size-16 ${
-              valid ? "bg-ok text-white ring-ok/10" : "bg-bad text-white ring-bad/10"
-            }`}
-          >
-            {valid ? <ShieldCheck className="size-7 sm:size-8" aria-hidden="true" /> : <ShieldAlert className="size-7 sm:size-8" aria-hidden="true" />}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className={`t-eyebrow ${valid ? "text-ok" : "text-bad"}`}>{valid ? "Issuance confirmed" : "Revoked"}</p>
-            <h1 id="status-title" className="mt-1 font-display text-2xl font-medium tracking-[-0.015em] sm:text-[2rem]">
-              {valid ? "Document verified" : "This document has been revoked"}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
-              {valid
-                ? `This ${d.docType} for ${d.companyName} was issued by ${site.issuer} and is recorded in our registry.`
-                : `${site.issuer} has withdrawn this document. Do not rely on it.`}
-            </p>
-          </div>
-          <div className="sm:self-start">
-            <StatusBadge status={d.status} size="md" />
-          </div>
+      <section aria-labelledby="status-title" className="overflow-hidden rounded-3xl border border-line bg-white shadow-raised">
+        <div className={`h-1.5 ${valid ? "bg-ok" : "bg-bad"}`} aria-hidden="true" />
+
+        <div className="px-5 pt-9 pb-7 text-center sm:px-10 sm:pt-12">
+          {valid ? <AnimatedCheck /> : <RevokedMark />}
+          <p className={`mt-6 t-eyebrow ${valid ? "text-ok" : "text-bad"}`}>{valid ? "Issuance confirmed" : "Revoked"}</p>
+          <h1 id="status-title" className="mt-2 font-display text-[2.75rem] leading-none font-medium tracking-[-0.02em] sm:text-6xl">
+            {valid ? "Verified" : "Revoked"}
+          </h1>
+          <p className="mx-auto mt-4 max-w-md text-[0.9375rem] leading-relaxed text-ink-soft">
+            {valid
+              ? `This ${d.docType.toLowerCase()} was issued by ${site.issuer} and is recorded in our registry.`
+              : `${site.issuer} has withdrawn this document. Do not rely on it.`}
+          </p>
         </div>
-        {!valid && (
-          <div className="border-t border-bad/15 px-5 py-4 sm:px-8">
-            <p className="text-xs font-semibold tracking-wide text-bad uppercase">Revocation reason</p>
-            <p className="mt-1 text-sm text-ink">{d.revokedReason || "No reason was given."}</p>
+
+        <div className="space-y-4 px-5 pb-7 sm:px-10 sm:pb-10">
+          {!valid && (
+            <div className="rounded-2xl border border-bad/20 bg-bad-tint p-4">
+              <p className="text-xs font-semibold tracking-wide text-bad uppercase">Revocation reason</p>
+              <p className="mt-1 text-sm text-ink">{d.revokedReason || "No reason was given."}</p>
+            </div>
+          )}
+
+          {/* Company name: the most important fact on the page */}
+          <div className={`rounded-2xl border p-5 sm:p-6 ${valid ? "border-ok/15 bg-ok-tint/60" : "border-line bg-sand"}`}>
+            <p className="text-[0.6875rem] font-semibold tracking-[0.16em] text-muted uppercase">Company name</p>
+            <p className="mt-2 text-[1.625rem] leading-tight font-bold tracking-[-0.01em] break-words text-ink sm:text-[2rem]">{d.companyName}</p>
+            {d.registrationNo && <p className="mt-2 text-sm text-ink-soft">Registration no. {d.registrationNo}</p>}
+            <p className="mt-3 inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-ink-soft ring-1 ring-line">{d.docType}</p>
           </div>
-        )}
+
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5 px-1 py-2">
+            {dates.map(([k, v]) => (
+              <div key={k} className="border-b border-line-soft pb-4">
+                <dt className="text-[0.8125rem] text-muted">{k}</dt>
+                <dd className="mt-1 text-base font-bold break-words text-ink">{v}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="rounded-2xl border border-line bg-sand/60 p-5">
+            <p className="text-[0.6875rem] font-semibold tracking-[0.16em] text-muted uppercase">Verification ID</p>
+            <p className="mt-2 t-mono text-ink">{d.id}</p>
+            <CopyButton text={link} icon="link" label="Copy verification link" toastTitle="Verification link copied" className="mt-4" />
+          </div>
+
+          {!qrOnly && (
+            <details className="group px-1">
+              <summary className="flex cursor-pointer list-none items-center gap-2 py-1 text-sm text-ink-soft select-none [&::-webkit-details-marker]:hidden">
+                <ChevronRight className="size-4 transition group-open:rotate-90" aria-hidden="true" />
+                <Fingerprint className="size-4 text-muted" aria-hidden="true" />
+                Document fingerprint (SHA-256)
+              </summary>
+              <div className="mt-2 flex items-start gap-2 rounded-lg bg-sand/60 p-3">
+                <p className="t-mono min-w-0 flex-1 text-ink">{d.sha256}</p>
+                <CopyButton variant="icon" text={d.sha256} label="Copy fingerprint" toastTitle="Fingerprint copied" />
+              </div>
+            </details>
+          )}
+        </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-5">
-          <section aria-labelledby="details-title" className="card">
-            <h2 id="details-title" className="border-b border-line px-5 py-4 t-h3 sm:px-6">Document details</h2>
-            <dl className="grid sm:grid-cols-2">
-              {fields.map(([k, v], i) => (
-                <div
-                  key={k}
-                  className={`border-line-soft px-5 py-3.5 sm:px-6 ${i < fields.length - 1 ? "border-b" : ""} ${
-                    i % 2 === 0 ? "sm:border-r" : ""
-                  } ${i === fields.length - 1 ? "sm:col-span-2 sm:border-r-0" : ""}`}
-                >
-                  <dt className="text-xs text-muted">{k}</dt>
-                  <dd className="mt-0.5 text-sm font-semibold break-words text-ink">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-          {!qrOnly && <HashCheck id={d.id} expected={d.sha256} />}
-        </div>
+      {!qrOnly && <HashCheck id={d.id} expected={d.sha256} />}
 
-        <aside className="space-y-5">
-          <section aria-labelledby="record-title" className="card card-pad">
-            <h2 id="record-title" className="t-h3">Verification record</h2>
-            <dl className="mt-4 space-y-4">
-              <div>
-                <dt className="flex items-center justify-between text-xs text-muted">
-                  Document ID
-                  <CopyButton variant="icon" text={d.id} label="Copy document ID" toastTitle="Document ID copied" />
-                </dt>
-                <dd className="t-mono text-ink">{d.id}</dd>
-              </div>
-              {!qrOnly && (
-              <div>
-                <dt className="flex items-center justify-between text-xs text-muted">
-                  SHA-256 fingerprint
-                  <CopyButton variant="icon" text={d.sha256} label="Copy fingerprint" toastTitle="Fingerprint copied" />
-                </dt>
-                <dd className="t-mono text-ink">{d.sha256}</dd>
-              </div>
-              )}
-            </dl>
-            <CopyButton text={link} icon="link" label="Copy verification link" toastTitle="Verification link copied" className="mt-5 w-full" />
-          </section>
-          <p className="px-1 t-caption">
-            {qrOnly
-              ? "The QR code confirms this registry entry. Make sure the company name and dates match the document in front of you."
-              : "The QR code confirms this registry entry. The fingerprint identifies the exact issued file: a PDF that has been edited, re-saved or printed will not match. Make sure the company name and dates match the document in front of you."}
-          </p>
-        </aside>
-      </div>
+      <p className="px-1 text-center t-caption">
+        {qrOnly
+          ? "The QR code confirms this registry entry. Make sure the company name and dates match the document in front of you."
+          : "The QR code confirms this registry entry. The fingerprint identifies the exact issued file: a PDF that has been edited, re-saved or printed will not match. Make sure the company name and dates match the document in front of you."}
+      </p>
     </div>
+  );
+}
+
+/** Circle draws itself, then the tick draws, then a ring pulses once. Static when reduced motion is on. */
+function AnimatedCheck() {
+  return (
+    <span className="relative mx-auto flex size-24 items-center justify-center sm:size-28" role="img" aria-label="Verified">
+      <span className="verify-ring absolute inset-0 rounded-full bg-ok/10" aria-hidden="true" />
+      <svg viewBox="0 0 120 120" className="relative size-full" aria-hidden="true">
+        <circle cx="60" cy="60" r="52" fill="#ecf7ef" />
+        <circle
+          className="verify-circle"
+          cx="60"
+          cy="60"
+          r="52"
+          fill="none"
+          stroke="#15803d"
+          strokeWidth="5"
+          strokeLinecap="round"
+          transform="rotate(-90 60 60)"
+        />
+        <path className="verify-tick" d="M38 62 L54 77 L84 45" fill="none" stroke="#15803d" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
+function RevokedMark() {
+  return (
+    <span
+      className="mx-auto flex size-24 items-center justify-center rounded-full bg-bad-tint text-bad ring-8 ring-bad/5 sm:size-28"
+      role="img"
+      aria-label="Revoked"
+    >
+      <ShieldAlert className="size-11 sm:size-12" aria-hidden="true" />
+    </span>
   );
 }
 
