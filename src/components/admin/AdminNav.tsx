@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/app/admin/actions";
-import { Logo, LogoMark } from "@/components/Logo";
+import { Logo } from "@/components/Logo";
 import { Breadcrumbs, type Crumb } from "@/components/ui/Breadcrumbs";
 import { site } from "@/lib/config";
 import { cn } from "@/lib/cn";
@@ -79,7 +79,7 @@ export function AdminTopbar() {
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-line bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:h-16 lg:px-10">
       <div className="flex min-w-0 items-center gap-3">
         <Link href="/admin" className="lg:hidden" aria-label="Documents">
-          <LogoMark className="size-7" />
+          <Logo height={18} />
         </Link>
         <Breadcrumbs items={crumbsFor(path)} />
       </div>
